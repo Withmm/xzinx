@@ -1,0 +1,6 @@
+{
+    "ip_version": "tcp4",
+    "ip": "127.0.0.1",
+    "port": "8089",
+    "max_packet_size": 4096
+}

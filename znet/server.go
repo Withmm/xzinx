@@ -14,9 +14,12 @@ const (
 type Server struct {
 	Name string //server name
 
-	IP string //ip
+	IPVersion string // ip version
 
+	IP   string //ip
 	Port string //port
+
+	MsgHandler ziface.IMsgHandler
 }
 
 func (s *Server) GetServerIp() string {
@@ -28,31 +31,37 @@ func (s *Server) GetServerPort() string {
 }
 
 func (s *Server) Run() {
-	listener, err := net.Listen("tcp", s.IP+":"+s.Port)
-	utils.HandleError(err)
-	fmt.Printf("Server is listening on %s\n", listener.Addr().String())
+	fmt.Println("[START] Server listening at IP:", s.IP, "Port:", s.Port)
 
 	for {
-		conn, err := listener.Accept()
+		addr, err := net.ResolveTCPAddr(s.IPVersion, s.IP+":"+s.Port)
 		utils.HandleError(err)
 
-		go func(conn net.Conn) {
-			defer conn.Close()
-			for {
-				buf := make([]byte, BUFMAX)
-				n, err := conn.Read(buf)
-				utils.HandleError(err)
-				conn.Write(buf[:n])
-			}
-		}(conn)
+		listener, err := net.ListenTCP(s.IPVersion, addr)
+		utils.HandleError(err)
+
+		con, err := listener.AcceptTCP()
+		Conn := &Connection{
+			Conn:       con,
+			ConnID:     0,
+			MsgHandler: s.MsgHandler,
+		}
+
+		go Conn.Run()
 	}
+}
+
+func (s *Server) RegisterRouter(n int64, r ziface.IRouter) {
+	s.MsgHandler.AddRouter(n, r)
 }
 
 func NewServer(name string) ziface.IServer {
 	s := &Server{
-		Name: name,
-		IP:   "127.0.0.1",
-		Port: "8089",
+		Name:       name,
+		IPVersion:  utils.GlobalObject.IPVersion,
+		IP:         utils.GlobalObject.IP,
+		Port:       utils.GlobalObject.Port,
+		MsgHandler: NewMsgHandler(),
 	}
 	return s
 }
