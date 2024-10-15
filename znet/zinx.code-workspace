@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "GinChat",
+			"path": "../../../../source_code/GinChat"
+		}
+	],
+	"settings": {}
+}
